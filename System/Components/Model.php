@@ -6,6 +6,7 @@ use System\Components\Relationships\BelongsToMany;
 use System\Components\Relationships\BelongsTo;
 use System\Components\Relationships\HasMany;
 use System\Components\Relationships\HasOne;
+use System\Components\DbConnection;
 use System\Services\TextTransforms;
 use System\Interfaces\Relationship;
 use IteratorAggregate;
@@ -159,7 +160,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		}
 
 		$methods = get_class_methods($this->_queryBuilder);
-		if(in_array($method, $methods)) {
+		if(is_array($methods) && in_array($method, $methods)) {
 			$query = call_user_func_array(array($this->_queryBuilder, $method), $args);
 			// exit(print_r($query, true));
 			if($query instanceof DbQuery) {
@@ -184,8 +185,10 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		parent::__construct();
 
 		$this->_queryBuilder = new QueryBuilder($this->getTable(), $this->getPrimaryKey());
-		$this->_db = $this->app->database;
-
+		if(isset($this->app)) {
+			$this->_db = $this->app->database;
+		}
+		
 		$this->_attributes = array();
 		$this->_with = array();
 
@@ -197,6 +200,17 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		$this->_instantiateArrayIfNecessary($this->casts);
 		$this->_instantiateArrayIfNecessary($this->fillable);
 		$this->_instantiateArrayIfNecessary($this->_originalValues);
+	}
+
+	/**
+	 * Register database connection
+	 * 
+	 * @param  DbConnection $db The connection to use to run queries
+	 * @return void
+	 */
+	public function registerDatabase(DbConnection $db)
+	{
+		$this->_db = $db;
 	}
 
 	/**
