@@ -59,13 +59,6 @@ class QueryBuilder extends AppComponent
     private $_where;
 
     /**
-     * Has the query been completely built?
-     *
-     * @var boolean  True for ready, False for not
-     */
-    private $_ready;
-
-    /**
      * The QueryBuilder constructor
      *
      * @param string $table      The table to construct the query against
@@ -86,8 +79,6 @@ class QueryBuilder extends AppComponent
         $this->_columns = array();
 
         $this->_joins = array();
-
-        $this->_ready = false;
     }
 
     /**
@@ -118,7 +109,7 @@ class QueryBuilder extends AppComponent
      */
     public function find($id)
     {
-        $this->_where[$this->_obj->getKey()] = $id;
+        $this->_where[$this->_primaryKey] = $id;
 
         return $this->_buildSelectComponents();
     }

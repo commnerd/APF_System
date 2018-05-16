@@ -81,13 +81,6 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	private $_db;
 
 	/**
-	 * Attributes to be handled by this class
-	 *
-	 * @var array
-	 */
-	private $_attributes;
-
-	/**
 	 * "With" registry
 	 * @var [type]
 	 */
@@ -111,6 +104,13 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @var string
 	 */
 	protected $primaryKey = "ID";
+
+	/**
+	 * Attributes to be handled by this class
+	 *
+	 * @var array
+	 */
+	protected $attributes;
 
 	/**
 	 * Casting declarations to maintain for this class
@@ -160,7 +160,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		}
 
 		$methods = get_class_methods($this->_queryBuilder);
-		if(is_array($methods) && in_array($method, $methods)) {
+		if(in_array($method, $methods)) {
 			$query = call_user_func_array(array($this->_queryBuilder, $method), $args);
 			// exit(print_r($query, true));
 			if($query instanceof DbQuery) {
@@ -189,7 +189,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 			$this->_db = $this->app->database;
 		}
 		
-		$this->_attributes = array();
+		$this->attributes = array();
 		$this->_with = array();
 
 		if(empty($this->table) || !is_string($this->table)) {
@@ -222,8 +222,8 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	public function __get($name)
 	{
 		$methods = get_class_methods(get_class($this));
-		if(isset($this->_attributes[$name])) {
-			return $this->_attributes[$name];
+		if(isset($this->attributes[$name])) {
+			return $this->attributes[$name];
 		}
 		if(in_array($name, $methods)) {
 			$relationship = $this->{$name}();
@@ -233,8 +233,8 @@ abstract class Model extends AppComponent implements IteratorAggregate
 				return $relationship->buildResultSet($results);
 			}
 		}
-		if($name === "attributes" && !isset($this->_attributes['attributes'])) {
-			return $this->_attributes;
+		if($name === "attributes" && !isset($this->attributes['attributes'])) {
+			return $this->attributes;
 		}
 
 		throw new ErrorException(self::ERROR_EXCEPTION_GET);
@@ -248,7 +248,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	public function __set($name, $value)
 	{
-		$this->_attributes[$name] = $value;
+		$this->attributes[$name] = $value;
 	}
 
 	/**
@@ -340,10 +340,10 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	public function getKey()
 	{
-		if(!isset($this->_attributes[$this->primaryKey])) {
+		if(!isset($this->attributes[$this->primaryKey])) {
 			return null;
 		}
-		return $this->_attributes[$this->primaryKey];
+		return $this->attributes[$this->primaryKey];
 	}
 
 	/**
@@ -362,7 +362,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 				$table = $this->table;
 
 				if(preg_match("/^".$table."_(.*)$/", $attribute, $matches)) {
-					$this->_attributes[$matches[1]] = $attributes[$attribute];
+					$this->attributes[$matches[1]] = $attributes[$attribute];
 					$this->_originalValues[$matches[1]] = $attributes[$attribute];
 				}
 
@@ -370,18 +370,18 @@ abstract class Model extends AppComponent implements IteratorAggregate
 			if(!empty($this->_with)) {
 
 				foreach($this->_with as $key => $relation) {
-					$this->_attributes[$key] = $this->fillChildren($results, $relation);
+					$this->attributes[$key] = $this->fillChildren($results, $relation);
 					array_pop($this->_with);
 
-					if(empty($this->_attributes[$key])) {
-						unset($this->_attributes[$key]);
+					if(empty($this->attributes[$key])) {
+						unset($this->attributes[$key]);
 					}
 				}
 			}
 		}
 		else {
 			foreach($this->fillable as $key) {
-				$this->_attributes[$key] = $attributes[$key];
+				$this->attributes[$key] = $attributes[$key];
 			}
 		}
 		return $this;
@@ -430,18 +430,18 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	public function save()
 	{
-		if(isset($this->_attributes[$this->primaryKey])) {
+		if(isset($this->attributes[$this->primaryKey])) {
 			$this->_update();
 		}
 		else {
-			$this->_attributes[$this->primaryKey] = $this->_insert();
+			$this->attributes[$this->primaryKey] = $this->_insert();
 		}
-		foreach($this->_attributes as $attribute => $value) {
+		foreach($this->attributes as $attribute => $value) {
 			if($value instanceof Model) {
 				$value->save($cascade);
 			}
 		}
-		return $this->_attributes[$this->primaryKey];
+		return $this->attributes[$this->primaryKey];
 	}
 
 	/**
@@ -450,7 +450,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @return iterable Attributes array
 	 */
 	public function getIterator() {
-        return $this->_attributes;
+        return $this->attributes;
     }
 
     /**
@@ -571,15 +571,15 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	public function toArray()
 	{
-		foreach($this->_attributes as $key => $value) {
+		foreach($this->attributes as $key => $value) {
 			if(is_array($value)) {
-				$this->_attributes[$key] = $this->_cascadeToArray($value);
+				$this->attributes[$key] = $this->_cascadeToArray($value);
 			}
 			if($value instanceof Model) {
-				$this->_attributes[$key] = $value->toArray();
+				$this->attributes[$key] = $value->toArray();
 			}
 		}
-		return $this->_attributes;
+		return $this->attributes;
 	}
 
 	/**
