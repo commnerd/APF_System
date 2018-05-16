@@ -643,7 +643,8 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	private function _getClassName()
 	{
-		return (new \ReflectionClass($this))->getShortName();
+		$class = new \ReflectionClass($this);
+		return $class->getShortName();
 	}
 
 	/**
