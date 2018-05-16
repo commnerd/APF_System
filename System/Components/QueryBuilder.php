@@ -386,7 +386,7 @@ class QueryBuilder extends AppComponent
         $qry .= $qryUpdate;
         $qryMap .= array_shift($qryMapUpdate);
 
-        return new DbQuery($qry, array_merge(array($qryMap), array_splice($qryMapUpdate, 0, 1)));
+        return new DbQuery($qry, array_merge(array($qryMap), $qryMapUpdate));
     }
 
     /**

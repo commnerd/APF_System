@@ -162,14 +162,13 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		$methods = get_class_methods($this->_queryBuilder);
 		if(in_array($method, $methods)) {
 			$query = call_user_func_array(array($this->_queryBuilder, $method), $args);
-			// exit(print_r($query, true));
 			if($query instanceof DbQuery) {
 				$result = $this->_db->runQuery($query);
 				if(is_array($result)) {
 					$this->fill($result);
 				}
 				if(is_integer($result)) {
-					$this->findOrFail($result);
+					return $this->findOrFail($result);
 				}
 			}
 			return $this;
@@ -648,7 +647,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	private function _insert() {
 		$query = $this->_queryBuilder->insert($this->toArray());
-		$this->_db->runQuery($query);
+		return $this->_db->runQuery($query);
 	}
 
 	/**
