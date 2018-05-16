@@ -22,7 +22,7 @@ class DbQuery extends PackageComponent
      *
      * @var array
      */
-    protected $_bindings = null;
+    protected $_bindings = array();
 
     /**
      * Construct the query
