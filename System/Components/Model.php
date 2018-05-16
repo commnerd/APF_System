@@ -397,8 +397,9 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		foreach($results as $row) {
 			if($row[$this->table."_".$this->primaryKey] === $this->getKey()) {
 				$obj = new $class();
-				if(!empty($relation->getWith())) {
-					$obj->with($relation->getWith());
+				$with = $relation->getWith();
+				if(!empty($with)) {
+					$obj->with($with);
 				}
 				if(!empty($row[$obj->getTable()."_".$obj->getPrimaryKey()])) {
 					$objs[$row[$obj->getTable()."_".$obj->getPrimaryKey()]] = $obj->fill($row, $results);
