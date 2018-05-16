@@ -313,6 +313,9 @@ class QueryBuilder extends AppComponent
 	 */
 	private function _buildInsertComponents() {
 		$qry = "INSERT INTO `".$this->_table."` (`KEYS`) VALUES (VALS)";
+        if(empty($this->_columns)) {
+            $qry = "INSERT INTO `".$this->_table."` (`".$this->_primaryKey."`) VALUES (NULL)";
+        }
 		$qryMap = "";
 		$keys = array();
 		$values = array();
