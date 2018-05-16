@@ -300,8 +300,8 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	public function getTable()
 	{
-		if(isset($this->_table)) {
-			return $this->_table;
+		if(isset($this->table)) {
+			return $this->table;
 		}
 		$reflect = new ReflectionClass($this);
 		$name = $reflect->getShortName();
