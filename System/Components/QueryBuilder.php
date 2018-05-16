@@ -5,9 +5,17 @@ namespace System\Components;
 use System\Components\Relationships\Relationship;
 use System\Components\Relationships\Belongs;
 use System\Components\Relationships\Has;
+use System\Components\DbConnection;
 
 class QueryBuilder extends AppComponent
 {
+
+    /**
+     * Reference to the database
+     * 
+     * @var DbConnection
+     */
+    private $_database;
 
     /**
      * The primary target table for query
@@ -61,12 +69,20 @@ class QueryBuilder extends AppComponent
     /**
      * The QueryBuilder constructor
      *
-     * @param string $table      The table to construct the query against
-     * @param string $primaryKey The primary key to construct the query against
+     * @param string       $table      The table to construct the query against
+     * @param string       $primaryKey The primary key to construct the query against
+     * @param DbConnection $db         The connection to use for the request
      */
-    public function __construct($table, $primaryKey)
+    public function __construct($table, $primaryKey, DbConnection $db = null)
     {
         parent::__construct();
+
+        if(isset($this->app)) {
+            $this->_database = $this->app->database;
+        }
+        if(!is_null($db)) {
+            $this->_db = $db;
+        }
 
         $this->_table = $table;
 
@@ -229,7 +245,7 @@ class QueryBuilder extends AppComponent
         $values = array();
         if(empty($this->_columns)) {
             $dbQry = new DbQuery("SELECT * FROM `$this->_table` LIMIT 1", array());
-            $result = $this->app->database->runQuery($dbQry);
+            $result = $this->_database->runQuery($dbQry);
             if(empty($result)) {
                 $qry = str_replace('COLS', '*', $qry);
                 return new DbQuery($qry, array_merge(array($qryMap), $values));
