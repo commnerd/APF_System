@@ -103,7 +103,7 @@ class DbConnection extends AppComponent
 		//var_dump($pSQL);
 		$stmt = $this->connection->prepare($pSQL);
 		//var_dump($stmt);
-		if (!is_null($pTheBindVal)) {
+		if (!empty($pTheBindVal)) {
 			//print_r($pTheBindVal);
 			$ref    = new \ReflectionClass('mysqli_stmt');
 			//print_r($ref);
@@ -128,7 +128,7 @@ class DbConnection extends AppComponent
     	$tempBindValArr = implode("||", $pTheBindVal);
     	$tempBindValArr = explode("||", $tempBindValArr);
 		$stmt = $this->connection->prepare($pSQL);
-		if (!is_null($pTheBindVal)) {
+		if (!empty($pTheBindVal)) {
 			//print_r($pTheBindVal);
 			$ref    = new \ReflectionClass('mysqli_stmt');
 			//print_r($ref);
@@ -153,7 +153,7 @@ class DbConnection extends AppComponent
 		$pSQL = $query->query;
 		$pTheBindVal = $query->bindings;
 		$stmt = $this->connection->prepare($pSQL);
-		if (!is_null($pTheBindVal)) {
+		if (!empty($pTheBindVal)) {
 			call_user_func_array(array($stmt, 'bind_param'), $this->_refValues($pTheBindVal));
 			//$stmt->bind_param("i", $pTheBindVal);
 		}
