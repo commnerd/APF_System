@@ -184,11 +184,11 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	{
 		parent::__construct();
 
-		$this->_queryBuilder = new QueryBuilder($this->getTable(), $this->getPrimaryKey());
 		if(isset($this->app)) {
 			$this->_db = $this->app->database;
 		}
-		
+		$this->_queryBuilder = new QueryBuilder($this->getTable(), $this->getPrimaryKey(), $this->_db);
+
 		$this->attributes = array();
 		$this->_with = array();
 
@@ -211,6 +211,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	public function registerDatabase(DbConnection $db)
 	{
 		$this->_db = $db;
+		$this->_queryBuilder = new QueryBuilder($this->getTable(), $this->getPrimaryKey(), $db);
 	}
 
 	/**
