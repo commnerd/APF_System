@@ -11,6 +11,7 @@ use System\Services\TextTransforms;
 use System\Interfaces\Relationship;
 use IteratorAggregate;
 use ReflectionClass;
+use ErrorException;
 
 /**
  * Model for use by the system
@@ -542,7 +543,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	{
 		$obj = $this->find($id);
 		if(empty($obj)) {
-			throw new Exception(self::ERROR_EXCEPTION_NOT_FOUND);
+			throw new ErrorException(self::ERROR_EXCEPTION_NOT_FOUND);
 		}
 		return $obj;
 	}
@@ -556,7 +557,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	private function ___delete($id)
 	{
 		if(empty($this->primaryKey)) {
-			throw new \ErrorException(self::ERROR_EXCEPTION_DELETE);
+			throw new ErrorException(self::ERROR_EXCEPTION_DELETE);
 		}
 
 		$column = $this->getPrimaryKey();
