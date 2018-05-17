@@ -616,12 +616,18 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 *
 	 * @return Model
 	 */
-	private function _get()
+	private function ___get()
 	{
 		$query = $this->_queryBuilder->get();
 		$records = $this->_db->runQuery($query);
 		if(sizeof($records) > 1) {
-			return $this->_cascadeToArray($records);
+			 foreach($records as $index => $record) {
+                    $class = get_class($this);
+                    $obj = new $class();
+                    $obj->fill($record);
+                    $records[$index] = $obj;
+            }
+            return $records;
 		}
 		if(sizeof($records) === 1) {
 			return $this->fill($records[0]);
@@ -681,6 +687,6 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	private function _calledFromSystem()
 	{
 		$trace = debug_backtrace();
-		return preg_match('/^System/', $trace[2]['class']);
+		return preg_match('/^System/', $trace[2]['class']) || $trace[2]['object'] instanceof Model;
 	}
 }
