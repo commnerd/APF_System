@@ -11,6 +11,7 @@ use System\Services\TextTransforms;
 use System\Interfaces\Relationship;
 use IteratorAggregate;
 use ReflectionClass;
+use ErrorException;
 
 /**
  * Model for use by the system
