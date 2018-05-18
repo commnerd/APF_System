@@ -514,17 +514,19 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	private function ___all()
 	{
 		$class = get_called_class();
-		$query = call_user_func_array(array($this->_queryBuilder, 'get'), array());
-		$results = $this->_db->runQuery($query);
-		$objs = array();
-		if(!empty($results)) {
-			foreach($results as $row) {
-				$obj = new $class();
-				$obj->setWithRelationships($this->_with);
-				$objs[$row[$obj->getTable()."_".$obj->getPrimaryKey()]] = $obj->fill($row, $results);
-			}
-		}
-		return $objs;
+        $query = call_user_func_array(array($this->_queryBuilder, 'get'), array());
+        $results = $this->_db->runQuery($query);
+        $objs = array();
+        if(!empty($results)) {
+                foreach($results as $row) {
+                        $obj = new $class();
+                        $obj->setWithRelationships($this->_with);
+                        $obj->fill($row, $results);
+                        $objs[$obj->getKey()] = $obj;
+                }
+        }
+        return $objs;
+
 	}
 
 	/**
