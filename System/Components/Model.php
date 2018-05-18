@@ -11,7 +11,6 @@ use System\Services\TextTransforms;
 use System\Interfaces\Relationship;
 use IteratorAggregate;
 use ReflectionClass;
-use ErrorException;
 
 /**
  * Model for use by the system
@@ -66,6 +65,13 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @var string
 	 */
 	const ERROR_IMPROPER_METHOD_USE = "Improper method use.";
+
+	/**
+	 * A central location to grab the current database
+	 * 
+	 * @var DbConnection
+	 */
+	public static $database;
 
 	/**
 	 * Build queries to pass to the database handler
@@ -187,6 +193,12 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		if(isset($this->app)) {
 			$this->_db = $this->app->database;
 		}
+
+		$class = get_called_class()
+		if(isset($class::$database)) {
+			$this->_db = $class::$database;
+		}
+		
 		$this->_queryBuilder = new QueryBuilder($this->getTable(), $this->getPrimaryKey(), $this->_db);
 
 		$this->attributes = array();
@@ -230,7 +242,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 			$relationship = $this->{$name}();
 			if($relationship instanceof Relationship) {
 				$query = $relationship->getQuery();
-				$results = $this->app->database->runQuery($query);
+				$results = $this->_db->runQuery($query);
 				return $relationship->buildResultSet($results);
 			}
 		}
@@ -504,7 +516,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	{
 		$class = get_called_class();
 		$query = call_user_func_array(array($this->_queryBuilder, 'get'), array());
-		$results = $this->app->database->runQuery($query);
+		$results = $this->_db->runQuery($query);
 		$objs = array();
 		if(!empty($results)) {
 			foreach($results as $row) {
