@@ -195,7 +195,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		}
 
 		if(isset(self::$database)) {
-			$this->_db = $class::$database;
+			$this->_db = self::$database;
 		}
 		
 		$this->_queryBuilder = new QueryBuilder($this->getTable(), $this->getPrimaryKey(), $this->_db);
