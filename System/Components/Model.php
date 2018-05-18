@@ -194,8 +194,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 			$this->_db = $this->app->database;
 		}
 
-		$class = get_called_class()
-		if(isset($class::$database)) {
+		if(isset(self::$database)) {
 			$this->_db = $class::$database;
 		}
 		
