@@ -542,7 +542,9 @@ abstract class Model extends AppComponent implements IteratorAggregate
 
 		$result = $this->_db->runQuery($query);
 
-		$this->fill($result[0]); 
+		if(!empty($result)) {
+			$this->fill($result[0]);
+		}
 
 		return $this;
 	}
