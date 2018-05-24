@@ -494,6 +494,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 					$this->with($child, $qb);
 				}
 			}
+			return $this;
 		}
 		$children = explode('.', $children);
 		$child = array_pop($children);

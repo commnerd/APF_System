@@ -14,7 +14,6 @@ class BelongsTo extends Belongs
         $key = $this->getKey();
         $class = $this->class;
 
-        $this->query = $class::where($key, $this->sourceModel->getKey())->select();
-        return $this;
+        return $class::where($key, $this->sourceModel->getKey())->get();
     }
 }
