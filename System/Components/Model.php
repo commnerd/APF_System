@@ -111,7 +111,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 *
 	 * @var string
 	 */
-	protected $primaryKey = "ID";
+	protected $primaryKey = "id";
 
 	/**
 	 * Attributes to be handled by this class
@@ -380,7 +380,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 				}
 
 			}
-			if(!empty($this->_with)) {
+			if(!empty($this->_with) && !empty($results)) {
 
 				foreach($this->_with as $key => $relation) {
 					$this->attributes[$key] = $this->fillChildren($results, $relation);
@@ -491,7 +491,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		if(is_array($children)) {
 			foreach($children as $index => $child) {
 				if(is_string($child)) {
-					$this->with($childrenStrings, $qb);
+					$this->with($child, $qb);
 				}
 			}
 		}

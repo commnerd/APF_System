@@ -18,7 +18,7 @@ class TextTransforms
 	 *
 	 * @var array
 	 */
-	const RULES = array(
+	public static $RULES = array(
 		array(
 			self::TRANSFORM_PLURAL_LABEL => 'ies',
 			self::TRANSFORM_SINGLE_LABEL => 'y'
@@ -81,7 +81,7 @@ class TextTransforms
 	 */
 	public static function aToBTransform($str, $direction)
 	{
-		foreach(self::RULES as $rule) {
+		foreach(self::$RULES as $rule) {
 			$a = $b = "";
 			switch($direction) {
 				case self::TRANSFORM_PLURAL_TO_SINGLE:
@@ -96,7 +96,7 @@ class TextTransforms
 			if(substr($str, -strlen($a)) === $a) {
 				return substr($str, 0, -strlen($a)).$b;
 			}
-			if(empty($a) && $rule === self::RULES[sizeof(self::RULES) - 1]) {
+			if(empty($a) && $rule === self::$RULES[sizeof(self::$RULES) - 1]) {
 				return $str.$b;
 			}
 		}

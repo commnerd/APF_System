@@ -25,6 +25,6 @@ abstract class Has extends Relationship
         $column = TextTransforms::camelCaseToSnakeCase($reflection->getShortName());
         $column .= "_".$obj->getPrimaryKey();
 
-        return strtoupper($column);
+        return $column;
     }
 }

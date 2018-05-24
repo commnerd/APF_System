@@ -12,7 +12,8 @@ class HasOne extends Has
     public function fetch()
     {
         $foreignKey = $this->getKey();
-
-        return $this->class::where($foreignKey, $this->sourceModel->getKey())->get();
+        $class = $this->class;
+        $this->query = $class::where($foreignKey, $this->sourceModel->getKey())->select();
+        return $this;
     }
 }

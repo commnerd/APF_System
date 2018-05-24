@@ -12,7 +12,8 @@ class HasMany extends Has
     public function fetch()
     {
         $foreignKey = $this->getKey();
-        $this->query = $this->class::where($foreignKey, $this->sourceModel->getKey())->get();
+        $class = $this->class;
+        $this->query = $class::where($foreignKey, $this->sourceModel->getKey())->select();
         return $this;
     }
 }

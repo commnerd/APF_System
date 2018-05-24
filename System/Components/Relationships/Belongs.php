@@ -24,7 +24,7 @@ abstract class Belongs extends Relationship
         $column = TextTransforms::camelCaseToSnakeCase($reflection->getShortName());
         $column .= "_".$this->sourceModel->getPrimaryKey();
 
-        return strtoupper($column);
+        return $column;
     }
 
 }

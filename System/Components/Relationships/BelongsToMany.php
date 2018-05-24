@@ -13,6 +13,8 @@ class BelongsToMany extends Belongs
     {
         $key = $this->getKey();
 
-        return $this->class::where($key, $this->sourceModel->getKey())->get();
+        $class = $this->class;
+        $this->query = $class::where($key, $this->sourceModel->getKey())->select();
+        return $this;
     }
 }

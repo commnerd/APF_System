@@ -12,7 +12,9 @@ class BelongsTo extends Belongs
     public function fetch()
     {
         $key = $this->getKey();
+        $class = $this->class;
 
-        return $this->class::where($key, $this->sourceModel->getKey())->get();
+        $this->query = $class::where($key, $this->sourceModel->getKey())->select();
+        return $this;
     }
 }

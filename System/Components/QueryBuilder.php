@@ -258,18 +258,24 @@ class QueryBuilder extends AppComponent
                 $selectors[] = $subQry;
             }
 
-            foreach($this->_joins as $relationship) {
+             foreach($this->_joins as $relationship) {
                 $class = $relationship->getClass();
                 $obj = new $class();
                 $dbQry = new DBQuery("SELECT * FROM `".$obj->getTable()."` LIMIT 1", array());
-                $result = $this->app->database->runQuery($dbQry);
-                $columns = array_keys($result[0]);
-                foreach($columns as $column) {
-                    $subQry = "`".$obj->getTable()."`.`".$column."` AS ";
-                    $subQry .= "`".$obj->getTable()."_".$column."`";
-                    $selectors[] = $subQry;
+                if(!isset($this->database) && isset($class::$database)) {
+                        $this->database = $class::$database;
+                }
+                $result = $this->database->runQuery($dbQry);
+                if(!empty($result)) {
+                        $columns = array_keys($result[0]);
+                        foreach($columns as $column) {
+                            $subQry = "`".$obj->getTable()."`.`".$column."` AS ";
+                            $subQry .= "`".$obj->getTable()."_".$column."`";
+                            $selectors[] = $subQry;
+                        }
                 }
             }
+
             $qry = preg_replace('/COLS/', implode(", ", $selectors), $qry);
         }
         else {
@@ -310,7 +316,7 @@ class QueryBuilder extends AppComponent
             if($key > 0) {
                 $qry .= $value[0]." ";
             }
-            $qry .= "`".$value[1]."` = ?";
+            $qry .= "`$this->_table`.`".$value[1]."` = ?";
             $qryMap .= $this->_getQryMapValueType($input);
             $values[] = $input;
         }
