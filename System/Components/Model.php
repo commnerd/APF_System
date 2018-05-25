@@ -272,12 +272,11 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @param  string  $class      The related class
 	 * @param  string  $foreignKey The foreign key to use in lookup
 	 * @param  string  $table      The table to look in if needing override
-	 * @return Model			   The associated model
+	 * @return Relationship		   The relationship model
 	 */
 	public function hasOne($class, $foreignKey = null, $table = null)
 	{
-		$relationship = new HasOne($this, $class, $foreignKey, $table);
-		return $relationship->fetch();
+		return new HasOne($this, $class, $foreignKey, $table);
 	}
 
 	/**
@@ -286,12 +285,11 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @param  string  $class      The related class
 	 * @param  string  $foreignKey The foreign key to use in lookup
 	 * @param  string  $table      The table to look in if needing override
-	 * @return array			   The associated model
+	 * @return Relationship		   The relationship model
 	 */
 	public function hasMany($class, $foreignKey = null, $table = null)
 	{
-		$relationship = new HasMany($this, $class, $foreignKey, $table);
-		return $relationship->fetch();
+		return new HasMany($this, $class, $foreignKey, $table);
 	}
 
 	/**
@@ -300,12 +298,11 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @param  string  $class      The related class
 	 * @param  string  $foreignKey The foreign key to use in lookup
 	 * @param  string  $table      The table to look in if needing override
-	 * @return Model			   The associated model
+	 * @return Relationship		   The relationship model
 	 */
 	public function belongsTo($class, $foreignKey = null, $table = null)
 	{
-		$relationship = new BelongsTo($this, $class, $foreignKey, $table);
-		return $relationship->fetch();
+		return new BelongsTo($this, $class, $foreignKey, $table);
 	}
 
 	/**
@@ -314,12 +311,11 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @param  string  $class      The related class
 	 * @param  string  $foreignKey The foreign key to use in lookup
 	 * @param  string  $table      The table to look in if needing override
-	 * @return array			   The associated model
+	 * @return Relationship		   The relationship model
 	 */
 	public function belongsToMany($class, $foreignKey = null, $table = null)
 	{
-		$relationship = new BelongsToMany($this, $class, $foreignKey, $table);
-		return $relationship->fetch();
+		return new BelongsToMany($this, $class, $foreignKey, $table);
 	}
 
 	/**
