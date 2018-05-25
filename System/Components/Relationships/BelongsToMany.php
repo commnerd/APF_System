@@ -2,6 +2,8 @@
 
 namespace System\Components\Relationships;
 
+use System\Components\Model;
+
 class BelongsToMany extends Belongs
 {
 	/**
@@ -14,6 +16,10 @@ class BelongsToMany extends Belongs
         $key = $this->getKey();
 
         $class = $this->class;
-        return $class::where($key, $this->sourceModel->getKey())->get();
+        $results = $class::where($key, $this->sourceModel->getKey())->get();
+        if($results instanceof Model) {
+            return array($results);
+        }
+        return $results;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace System\Components\Relationships;
 
+use System\Components\Model;
+
 class BelongsTo extends Belongs
 {
 	/**
@@ -14,6 +16,11 @@ class BelongsTo extends Belongs
         $key = $this->getKey();
         $class = $this->class;
 
-        return $class::where($key, $this->sourceModel->getKey())->get();
+        $result = $class::where($key, $this->sourceModel->getKey())->get();
+        if(is_array($results)) {
+            return array_pop($result);
+        }
+
+        return $result;
     }
 }

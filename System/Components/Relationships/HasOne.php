@@ -13,6 +13,11 @@ class HasOne extends Has
     {
         $foreignKey = $this->getKey();
         $class = $this->class;
-        return $class::where($foreignKey, $this->sourceModel->getKey())->get();
+        $result = $class::where($foreignKey, $this->sourceModel->getKey())->get();
+        if(is_array($results)) {
+            return array_pop($result);
+        }
+
+        return $result;
     }
 }

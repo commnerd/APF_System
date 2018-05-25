@@ -2,6 +2,8 @@
 
 namespace System\Components\Relationships;
 
+use System\Components\Model;
+
 class HasMany extends Has
 {
     /**
@@ -13,6 +15,10 @@ class HasMany extends Has
     {
         $foreignKey = $this->getKey();
         $class = $this->class;
-        return $class::where($foreignKey, $this->sourceModel->getKey())->get();
+        $results = $class::where($foreignKey, $this->sourceModel->getKey())->get();
+        if($results instanceof Model) {
+            return array($results);
+        }
+        return $results;
     }
 }
