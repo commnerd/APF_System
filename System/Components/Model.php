@@ -241,9 +241,11 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		if(in_array($name, $methods)) {
 			$relationship = $this->{$name}();
 			if($relationship instanceof Relationship) {
-				$query = $relationship->getQuery();
-				$results = $this->_db->runQuery($query);
-				return $relationship->buildResultSet($results);
+				$results = $relationship->fetch();
+				if($results instanceof Model) {
+					$this->attributes[$name] = $results;
+					return $results;
+				}
 			}
 		}
 		if($name === "attributes" && !isset($this->attributes['attributes'])) {

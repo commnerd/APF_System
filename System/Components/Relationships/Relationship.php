@@ -75,16 +75,31 @@ abstract class Relationship implements RelationshipInterface
         $this->table = $table;
     }
 
+    /**
+     * Get the source class
+     * 
+     * @return string Class name
+     */
 	public function getClass()
 	{
 		return $this->class;
 	}
 
+    /**
+     * Get the source model object
+     * 
+     * @return Model The model reference
+     */
 	public function getSourceModel()
 	{
 		return $this->sourceModel;
 	}
 
+    /**
+     * Get the primary key column name, guess if null
+     * 
+     * @return string The column name for the primary key
+     */
 	public function getKey()
 	{
 		if(isset($this->column)) {
@@ -94,28 +109,37 @@ abstract class Relationship implements RelationshipInterface
 		return $this->guessKey();
 	}
 
-    public function getQuery()
-    {
-		if(!$this->query instanceof DbQuery) {
-			throw new ErrorException(self::EXCEPTION_NOT_QUERY);
-		}
-        return $this->query;
-    }
-
+    /**
+     * Get the result from the relationship
+     * @param  array $set  The raw database rows
+     * @return mixed       Model or array of models
+     */
     public function buildResultSet($set) {
         $result = array();
         $class = $this->class;
         foreach($set as $item) {
             $obj = new $class();
+            if(empty($item)) return;
+            if(is_object($item)) $item = $item->toArray();
             $result[] = $obj->fill($item);
         }
-        return sizeof($result) === 1 ? array_pop($result) : $result;
+        return $result;
     }
 
+    /**
+     * Set the _with variable used to label relationships
+     * 
+     * @param array|string $str String or array of strings labeling relationships
+     */
 	public function setWith($str = null) {
 		$this->_with = $str;
 	}
 
+    /**
+     * Get the with variable
+     * 
+     * @return array|string $str String or array of strings labeling relationships
+     */
 	public function getWith() {
 		return $this->_with;
 	}
