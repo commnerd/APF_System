@@ -430,7 +430,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 				}
 			}
 		}
-		return $objs;
+		return ($relation instanceof HasOne || $relation instanceof BelongsTo) ? array_pop($objs) : $objs;
 	}
 
 	/**
@@ -541,7 +541,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		$results = $this->_db->runQuery($query);
 
 		if(!empty($results)) {
-			$this->fill($results[0], $results);
+			$this->fill($results[sizeof($results) - 1], $results);
 		}
 
 		return $this;
