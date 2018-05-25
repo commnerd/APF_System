@@ -480,7 +480,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @param  QueryBuilder|null $qb
 	 * @return Model                       The parent-most model
 	 */
-	private function ___with($children, QueryBuilder $qb = null)
+	protected function ___with($children, QueryBuilder $qb = null)
 	{
 		if(empty($qb)) {
 			$qb = $this->_queryBuilder;
@@ -510,7 +510,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 *
 	 * @return array Array of models of the type that was called
 	 */
-	private function ___all()
+	protected function ___all()
 	{
 		$class = get_called_class();
         $query = call_user_func_array(array($this->_queryBuilder, 'get'), array());
@@ -534,14 +534,14 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @param  integer $id The primary key for the model
 	 * @return Model|null  The model if it exists or null
 	 */
-	private function ___find($id)
+	protected function ___find($id)
 	{
 		$query = $this->_queryBuilder->where($this->getPrimaryKey(), $id)->get();
 
-		$result = $this->_db->runQuery($query);
+		$results = $this->_db->runQuery($query);
 
-		if(!empty($result)) {
-			$this->fill($result[0]);
+		if(!empty($results)) {
+			$this->fill($results[0], $results);
 		}
 
 		return $this;
@@ -553,7 +553,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @param  integer $id The primary key for the model
 	 * @return Model|null  The model if it exists or null
 	 */
-	private function ___findOrFail($id)
+	protected function ___findOrFail($id)
 	{
 		$obj = $this->find($id);
 		if(empty($obj)) {

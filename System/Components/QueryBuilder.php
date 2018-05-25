@@ -125,9 +125,9 @@ class QueryBuilder extends AppComponent
      */
     public function find($id)
     {
-        $this->_where[$this->_primaryKey] = $id;
+        $this->where($this->_primaryKey, $id);
 
-        return $this->_buildSelectComponents();
+        return $this->get();
     }
 
     /**
