@@ -47,13 +47,6 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	const ERROR_EXCEPTION_GET       = "Variable not found.";
 
 	/**
-	 * Error passed for unintended arguments being passed
-	 *
-	 * @var string
-	 */
-	const ERROR_PRIVATE_ARGUMENTS   = "Passed arguments not intended for framework user.";
-
-	/**
 	 * Method only intended for system
 	 *
 	 * @var string
@@ -90,7 +83,8 @@ abstract class Model extends AppComponent implements IteratorAggregate
 
 	/**
 	 * "With" registry
-	 * @var [type]
+	 * 
+	 * @var array
 	 */
 	private $_with;
 
@@ -364,9 +358,6 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @return Model              Whatever was just filled
 	 */
 	public function fill($attributes, $results = null) {
-		if(isset($results) && !$this->_calledFromSystem()) {
-			throw new ErrorException(self::ERROR_PRIVATE_ARGUMENTS);
-		}
 		if($this->_calledFromSystem()) {
 			foreach(array_keys($attributes) as $attribute) {
 				$table = $this->table;
@@ -706,6 +697,12 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	private function _calledFromSystem()
 	{
 		$trace = debug_backtrace();
-		return preg_match('/^System/', $trace[2]['class']) || $trace[2]['object'] instanceof Model;
+        $i = 1;
+        $func = $trace[$i]['function'];
+        while($func === $trace[$i]['function']) {
+                $i++;
+        }
+        return preg_match('/^System/', get_class($trace[$i]['object']));
+
 	}
 }
