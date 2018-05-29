@@ -440,17 +440,21 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	public function save()
 	{
+		$nonScalars = array();
+		foreach($this->attributes as $key => $attr) {
+			if(is_array($attr) || $attr instanceof Model) {
+				$nonScalars[$key] = $attr;
+				unset($this->attributes[$key]);
+			}
+		}
 		if(isset($this->attributes[$this->primaryKey])) {
 			$this->_update();
 		}
 		else {
 			$this->attributes[$this->primaryKey] = $this->_insert();
 		}
-		foreach($this->attributes as $attribute => $value) {
-			if($value instanceof Model) {
-				$value->save($cascade);
-			}
-		}
+
+		$this->attributes = array_merge($this->attributes, $nonScalars);
 		return $this->attributes[$this->primaryKey];
 	}
 
