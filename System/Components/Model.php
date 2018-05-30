@@ -47,13 +47,6 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	const ERROR_EXCEPTION_GET       = "Variable not found.";
 
 	/**
-	 * Method only intended for system
-	 *
-	 * @var string
-	 */
-	const ERROR_SYSTEM_METHOD       = "This method is intended for the framework only.";
-
-	/**
 	 * Error passed for unintended arguments being passed
 	 *
 	 * @var string
@@ -167,7 +160,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 			if($query instanceof DbQuery) {
 				$result = $this->_db->runQuery($query);
 				if(is_array($result)) {
-					$this->fill($result);
+					$this->fillFromStorage($result);
 				}
 				if(is_integer($result)) {
 					return $this->findOrFail($result);
@@ -354,37 +347,45 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * Fill model from array
 	 *
 	 * @param  array  $attributes Array of items to populate model with
-	 * @param  array  $results 	  Results from a Database Query (not for use by framework user)
 	 * @return Model              Whatever was just filled
 	 */
 	public function fill($attributes, $results = null) {
-		if($this->_calledFromSystem()) {
-			foreach(array_keys($attributes) as $attribute) {
-				$table = $this->table;
+		foreach($this->fillable as $key) {
+			$this->attributes[$key] = $attributes[$key];
+		}
 
-				if(preg_match("/^".$table."_(.*)$/", $attribute, $matches)) {
-					$this->attributes[$matches[1]] = $attributes[$attribute];
-					$this->_originalValues[$matches[1]] = $attributes[$attribute];
-				}
+		return $this;
+	}
 
+	/**
+	 * Fill model from result set
+	 *
+	 * @param  array  $attributes Array of attributes for parent model
+	 * @param  array  $results 	  Results from a storage retrieval
+	 * @return Model              Whatever was just filled
+	 */
+	protected function fillFromStorage($attributes, $results = null) {
+		foreach(array_keys($attributes) as $attribute) {
+			$table = $this->table;
+
+			if(preg_match("/^".$table."_(.*)$/", $attribute, $matches)) {
+				$this->attributes[$matches[1]] = $attributes[$attribute];
+				$this->_originalValues[$matches[1]] = $attributes[$attribute];
 			}
-			if(!empty($this->_with) && !empty($results)) {
 
-				foreach($this->_with as $key => $relation) {
-					$this->attributes[$key] = $this->fillChildren($results, $relation);
-					array_pop($this->_with);
+		}
+		if(!empty($this->_with) && !empty($results)) {
 
-					if(empty($this->attributes[$key])) {
-						unset($this->attributes[$key]);
-					}
+			foreach($this->_with as $key => $relation) {
+				$this->attributes[$key] = $this->fillChildren($results, $relation);
+				array_pop($this->_with);
+
+				if(empty($this->attributes[$key])) {
+					unset($this->attributes[$key]);
 				}
 			}
 		}
-		else {
-			foreach($this->fillable as $key) {
-				$this->attributes[$key] = $attributes[$key];
-			}
-		}
+
 		return $this;
 	}
 
@@ -395,11 +396,8 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @param  Relationship|null $relation The relationship
 	 * @return array                       Filled child models
 	 */
-	public function fillChildren(array $results, Relationship $relation = null)
+	protected function fillChildren(array $results, Relationship $relation = null)
 	{
-		if(isset($results) && !$this->_calledFromSystem()) {
-			throw new ErrorException(self::ERROR_SYSTEM_METHOD);
-		}
 		if(!isset($relation)) {
 			foreach($this->_with as $relation) {
 				$this->fillChildren($results, $relation);
@@ -515,7 +513,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
                 foreach($results as $row) {
                         $obj = new $class();
                         $obj->setWithRelationships($this->_with);
-                        $obj->fill($row, $results);
+                        $obj->fillFromStorage($row, $results);
                         $objs[$obj->getKey()] = $obj;
                 }
         }
@@ -536,7 +534,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		$results = $this->_db->runQuery($query);
 
 		if(!empty($results)) {
-			$this->fill($results[sizeof($results) - 1], $results);
+			$this->fillFromStorage($results[sizeof($results) - 1], $results);
 		}
 
 		return $this;
@@ -634,13 +632,13 @@ abstract class Model extends AppComponent implements IteratorAggregate
 			 foreach($records as $index => $record) {
                     $class = get_class($this);
                     $obj = new $class();
-                    $obj->fill($record);
+                    $obj->fillFromStorage($record);
                     $records[$index] = $obj;
             }
             return $records;
 		}
 		if(sizeof($records) === 1) {
-			return $this->fill($records[0]);
+			return $this->fillFromStorage($records[0]);
 		}
 		return array();
 	}
@@ -652,8 +650,17 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	private function _update()
 	{
-		$query = $this->_queryBuilder->update($this->toArray());
-		$this->_db->runQuery($query);
+		$executeUpdate = false;
+        foreach($this->_originalValues as $key => $value) {
+                if($this->attributes[$key] !== $value) {
+                        $executeUpdate = true;
+                }
+        }
+        if($executeUpdate) {
+                $query = $this->_queryBuilder->update($this->toArray());
+                $this->_db->runQuery($query);
+        }
+
 	}
 
 	/**
@@ -702,7 +709,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
         while($func === $trace[$i]['function']) {
                 $i++;
         }
-        return preg_match('/^System/', get_class($trace[$i]['object']));
+        return preg_match('/^System/', get_class($trace[$i]['object'])) || $trace[$i]['object'] instanceof Model;
 
 	}
 }

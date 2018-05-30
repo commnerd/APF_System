@@ -80,7 +80,7 @@ class QueryBuilder extends AppComponent
         if(isset($this->app)) {
             $this->_database = $this->app->database;
         }
-        if(!is_null($db)) {
+        if(!isset($this->_database) && !is_null($db)) {
             $this->_database = $db;
         }
 
