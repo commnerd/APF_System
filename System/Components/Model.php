@@ -189,7 +189,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 			$this->_db = $this->app->database;
 		}
 
-		if(isset(self::$database)) {
+		if(!isset($this->_db) && isset(self::$database)) {
 			$this->_db = self::$database;
 		}
 		
