@@ -415,7 +415,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 					$obj->with($with);
 				}
 				if(!empty($row[$obj->getTable()."_".$obj->getPrimaryKey()])) {
-					$objs[$row[$obj->getTable()."_".$obj->getPrimaryKey()]] = $obj->fill($row, $results);
+					$objs[$row[$obj->getTable()."_".$obj->getPrimaryKey()]] = $obj->fillFromStorage($row, $results);
 				}
 			}
 		}
@@ -531,7 +531,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	{
 		$query = $this->_queryBuilder->where($this->getPrimaryKey(), $id)->get();
 
-		$results = $this->_db->runQuery($query);
+		$results = array_pop($this->_db->runQuery($query));
 
 		if(!empty($results)) {
 			$this->fillFromStorage($results[sizeof($results) - 1], $results);
