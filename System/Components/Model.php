@@ -533,6 +533,10 @@ abstract class Model extends AppComponent implements IteratorAggregate
 
 		$results = array_pop($this->_db->runQuery($query));
 
+		if(empty($results)) {
+	        return null;
+        }
+
 		if(!empty($results)) {
 			$this->fillFromStorage($results[sizeof($results) - 1], $results);
 		}
