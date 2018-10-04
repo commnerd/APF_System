@@ -1,10 +1,10 @@
 <?php 
 
-namespace CONSAPP\Services;
+namespace System\Services;
 
 use Upload\Validation\Mimetype;
 use Upload\Storage\FileSystem;
-use CONSAPP\Entities\Request;
+use System\Components\Request;
 use Upload\Validation\Size;
 use Upload\File;
 
@@ -85,7 +85,7 @@ class UploadHandler
 	 * 
 	 * @var array
 	 */
-	private $_errors = array();
+	protected $_errors = array();
 
 	/**
 	 * Validation definitions

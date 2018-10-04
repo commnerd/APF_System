@@ -55,7 +55,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 
 	/**
 	 * A central location to grab the current database
-	 * 
+	 *
 	 * @var DbConnection
 	 */
 	public static $database;
@@ -76,7 +76,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 
 	/**
 	 * "With" registry
-	 * 
+	 *
 	 * @var array
 	 */
 	private $_with;
@@ -185,7 +185,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		if(!isset($this->_db) && isset(self::$database)) {
 			$this->_db = self::$database;
 		}
-		
+
 		$this->_queryBuilder = new QueryBuilder($this->getTable(), $this->getPrimaryKey(), $this->_db);
 
 		$this->attributes = array();
@@ -203,7 +203,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 
 	/**
 	 * Register database connection
-	 * 
+	 *
 	 * @param  DbConnection $db The connection to use to run queries
 	 * @return void
 	 */
@@ -239,6 +239,23 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		}
 
 		throw new ErrorException(self::ERROR_EXCEPTION_GET);
+	}
+
+	/**
+	 * Implemented for twig calls to magic __get method
+	 *
+	 * @param  string $name Name of variable to retrieve
+	 * @return boolean      True if model returns something, False if it throws an exception
+	 */
+	public function __isset($name)
+	{
+		try {
+			$this->{$name};
+		}
+		catch(ErrorException $e) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -350,8 +367,13 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @return Model              Whatever was just filled
 	 */
 	public function fill($attributes, $results = null) {
+		if(!isset($this->attributes[$this->primaryKey]) && isset($attributes[$this->getPrimaryKey()])) {
+			$this->attributes[$this->getPrimaryKey()] = $attributes[$this->getPrimaryKey()];
+		}
 		foreach($this->fillable as $key) {
-			$this->attributes[$key] = $attributes[$key];
+			if(isset($attributes[$key])) {
+				$this->attributes[$key] = $attributes[$key];
+			}
 		}
 
 		return $this;
@@ -458,7 +480,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 
     /**
 	 * Method to allow you to set the relationships
-	 * 
+	 *
 	 * @param array $with The with array to be set locally
 	 * @return void
 	 */
@@ -622,13 +644,14 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	/**
 	 * Get model from the database
 	 *
-	 * @return Model
+	 * @return array Array of associated models
 	 */
-	private function ___get()
+	private function ___get($debug = false)
 	{
 		$query = $this->_queryBuilder->get();
 		$records = $this->_db->runQuery($query);
-		if(sizeof($records) > 1) {
+
+		if(!empty($records)) {
 			 foreach($records as $index => $record) {
                     $class = get_class($this);
                     $obj = new $class();
@@ -636,9 +659,6 @@ abstract class Model extends AppComponent implements IteratorAggregate
                     $records[$index] = $obj;
             }
             return $records;
-		}
-		if(sizeof($records) === 1) {
-			return $this->fillFromStorage($records[0]);
 		}
 		return array();
 	}
@@ -657,7 +677,8 @@ abstract class Model extends AppComponent implements IteratorAggregate
                 }
         }
         if($executeUpdate) {
-                $query = $this->_queryBuilder->update($this->toArray());
+                $query = $this->_queryBuilder->where($this->primaryKey, $this->getKey())->update($this->toArray());
+
                 $this->_db->runQuery($query);
         }
 

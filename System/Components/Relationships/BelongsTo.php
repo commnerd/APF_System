@@ -15,15 +15,12 @@ class BelongsTo extends Belongs
     {
         $key = $this->getKey();
         $class = $this->class;
+        $obj = new $class();
 
-        $result = $class::where($key, $this->sourceModel->getKey())->get();
+        $result = $class::where($obj->getPrimaryKey(), $this->sourceModel->{$key})->get(true);
         if(empty($result)) {
             return null;
         }
-        if(is_array($result)) {
-            return array_pop($result);
-        }
-
-        return $result;
+        return array_pop($result);
     }
 }

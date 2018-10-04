@@ -11,9 +11,10 @@ class DbConnection extends AppComponent
 
 	public function __construct($username, $password, $hostname, $dbname, $port) {
 		parent::__construct();
-        $this->connection = new mysqli($hostname, $username, $password, $dbname, $port);
+		$this->connection = new mysqli($hostname, $username, $password, $dbname, $port);
+		$this->connection->set_charset("utf8");
 		if ($this->connection->connect_errno) {
-		    echo "Failed to connect to MySQL: (" . $this->connection->connect_errno . ") " . $this->connection->connect_error;
+			echo "Failed to connect to MySQL: (" . $this->connection->connect_errno . ") " . $this->connection->connect_error;
 		}
 	}
 
@@ -22,24 +23,22 @@ class DbConnection extends AppComponent
 		$this->connection->close();
 	}
 
-    public function getDbInfo($pSQL) {
+	public function getDbInfo($pSQL) {
 		$stmt = $this->connection->prepare($pSQL);
-	    $stmt->execute();
-	    $row = $this->bind_result_array($stmt);
-	    if(!$stmt->error)
-	    {
-	        while($stmt->fetch())
-	            $dataArray = $row;
-
-	    }
-	    $stmt->close();
-	    if (isset($dataArray)) {
-	    	return $dataArray;
-	    } else {
-	    	return;
-	    }
-
-    }
+		$stmt->execute();
+		$row = $this->bind_result_array($stmt);
+		if(!$stmt->error) {
+			while($stmt->fetch()) {
+				$dataArray = $row;
+			}
+		}
+		$stmt->close();
+		if (isset($dataArray)) {
+			return $dataArray;
+		} else {
+			return;
+		}
+	}
 
 	public function runQuery(DbQuery $query)
 	{
@@ -58,7 +57,7 @@ class DbConnection extends AppComponent
 		return array();
 	}
 
-    private function getCustomQueries(DbQuery $query) {
+	private function getCustomQueries(DbQuery $query) {
 		$pSQL = $query->query;
  		$pTheBindVal = $query->bindings;
 		$stmt = $this->connection->prepare($pSQL);
@@ -66,40 +65,39 @@ class DbConnection extends AppComponent
 			call_user_func_array(array($stmt, 'bind_param'), $this->_refValues($pTheBindVal));
 			//$stmt->bind_param("i", $pTheBindVal);
 		}
-	    $stmt->execute();
+		if(!is_object($stmt)) {
+			exit(print_r($query, true));
+		}
+		$stmt->execute();
 
-	    // print_r($stmt->error);
-	    $stmt->store_result();
-	    $row = $this->bind_result_array($stmt);
-	    if(!$stmt->error)
-	    {
+		$stmt->store_result();
+		$row = $this->bind_result_array($stmt);
+		if(!$stmt->error) {
 
-	        while($stmt->fetch()) {
+			while($stmt->fetch()) {
+				foreach( $row as $key=>$value ) {
+					$row_tmb[ $key ] = $value;
+				}
 
-			    foreach( $row as $key=>$value )
-			    {
-			        $row_tmb[ $key ] = $value;
-			    }
-
-	            $dataArray[] = $row_tmb;
+				$dataArray[] = $row_tmb;
 
 			}
-	    }
-	    $stmt->close();
-	    if (isset($dataArray)) {
-	    	return $dataArray;
-	    	unset($dataArray);
-	    } else {
-	    	return;
-	    }
+		}
+		$stmt->close();
+		if (isset($dataArray)) {
+			return $dataArray;
+			unset($dataArray);
+		} else {
+			return;
+		}
 
-    }
+	}
 
-    private function addRecord(DbQuery $query) {
+	private function addRecord(DbQuery $query) {
 		$pSQL = $query->query;
 		$pTheBindVal = $query->bindings;
-    	$tempBindValArr = implode("||", $pTheBindVal);
-    	$tempBindValArr = explode("||", $tempBindValArr);
+		$tempBindValArr = implode("||", $pTheBindVal);
+		$tempBindValArr = explode("||", $tempBindValArr);
 		//var_dump($pSQL);
 		$stmt = $this->connection->prepare($pSQL);
 		//var_dump($stmt);
@@ -115,18 +113,20 @@ class DbConnection extends AppComponent
 			//$stmt->bind_param("i", $pTheBindVal);
 		}
 		unset($tempBindValArr);
-	    $stmt->execute();
-	    $newID = $stmt->insert_id;
-	    $stmt->close();
-	    //echo '<p>New ID: '.$newID.'<p>';
-	    return $newID;
-    }
+		if(!is_object($stmt)) {
+			exit(print_r($query, true));
+		}
+		$stmt->execute();
+		$newID = $stmt->insert_id;
+		$stmt->close();
+		return $newID;
+	}
 
-    private function updateRecord(DbQuery $query) {
+	private function updateRecord(DbQuery $query) {
 		$pSQL = $query->query;
 		$pTheBindVal = $query->bindings;
-    	$tempBindValArr = implode("||", $pTheBindVal);
-    	$tempBindValArr = explode("||", $tempBindValArr);
+		$tempBindValArr = implode("||", $pTheBindVal);
+		$tempBindValArr = explode("||", $tempBindValArr);
 		$stmt = $this->connection->prepare($pSQL);
 		if (!empty($pTheBindVal)) {
 			//print_r($pTheBindVal);
@@ -141,15 +141,18 @@ class DbConnection extends AppComponent
 		}
 		unset($tempBindValArr);
 
-	    ////var_dump($stmt);
-	    $stmt->execute();
-	    // $newID = $stmt->update_id;
-	    $stmt->close();
-	    //echo '<p>New ID: '.$newID.'<p>';
-	    //return $newID;
-    }
+		////var_dump($stmt);
+		if(!is_object($stmt)) {
+			exit(print_r($query, true));
+		}
+		$stmt->execute();
+		// $newID = $stmt->update_id;
+		$stmt->close();
+		//echo '<p>New ID: '.$newID.'<p>';
+		//return $newID;
+	}
 
-    private function deleteRecord(DbQuery $query) {
+	private function deleteRecord(DbQuery $query) {
 		$pSQL = $query->query;
 		$pTheBindVal = $query->bindings;
 		$stmt = $this->connection->prepare($pSQL);
@@ -157,8 +160,8 @@ class DbConnection extends AppComponent
 			call_user_func_array(array($stmt, 'bind_param'), $this->_refValues($pTheBindVal));
 			//$stmt->bind_param("i", $pTheBindVal);
 		}
-	    $stmt->execute();
-    }
+		$stmt->execute();
+	}
 
 
 	/*

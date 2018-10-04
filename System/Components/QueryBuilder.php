@@ -157,10 +157,16 @@ class QueryBuilder extends AppComponent
      */
     public function where($column, $op, $value = null)
     {
+        foreach($this->_where as $index => $def) {
+            if($def[1] === $column) {
+                array_splice($this->_where, $index, 1);
+            }
+        }
         if(empty($value)) {
             $this->_where[] = array(' AND ', $column, $op);
             return $this;
         }
+
         $this->_where[] = array(' AND ', $column, $op, $value);
         return $this;
     }
@@ -310,13 +316,16 @@ class QueryBuilder extends AppComponent
 
         foreach($this->_where as $key => $value) {
             $input = $value[2];
+            $op = "=";
             if(sizeof($value) == 4) {
+                $op = $value[2];
                 $input = $value[3];
             }
             if($key > 0) {
                 $qry .= $value[0]." ";
             }
-            $qry .= "`$this->_table`.`".$value[1]."` = ?";
+            $qry .= "`$this->_table`.`".$value[1]."` $op ?";
+
             $qryMap .= $this->_getQryMapValueType($input);
             $values[] = $input;
         }
@@ -328,16 +337,16 @@ class QueryBuilder extends AppComponent
         return new DbQuery($qry, array_merge(array($qryMap), $values));
     }
 
-    /**
+	/**
 	 * Automagically build the insert query and associated value map
 	 *
 	 * @return DbQuery  Query and value map
 	 */
 	private function _buildInsertComponents() {
 		$qry = "INSERT INTO `".$this->_table."` (`KEYS`) VALUES (VALS)";
-        if(empty($this->_columns)) {
-            $qry = "INSERT INTO `".$this->_table."` (`".$this->_primaryKey."`) VALUES (NULL)";
-        }
+		if(empty($this->_columns)) {
+			$qry = "INSERT INTO `".$this->_table."` (`".$this->_primaryKey."`) VALUES (NULL)";
+		}
 		$qryMap = "";
 		$keys = array();
 		$values = array();
@@ -378,48 +387,49 @@ class QueryBuilder extends AppComponent
 		return new DbQuery($qry, array_merge(array($qryMap), $values));
 	}
 
-    /**
-     * Automagically build the delete query and associated value map
-     *
-     * @return DbQuery  Query and value map
-     */
-    private function _buildDeleteComponents()
-    {
-        $qry = "DELETE FROM `".$this->_table."` WHERE ";
-        $qryMap = "";
+	/**
+	 * Automagically build the delete query and associated value map
+	 *
+	 * @return DbQuery  Query and value map
+	 */
+	private function _buildDeleteComponents()
+	{
+		$qry = "DELETE FROM `".$this->_table."` WHERE ";
+		$qryMap = "";
 
-        list($qryUpdate, $qryMapUpdate) = $this->_inputBuilder("where");
-        $qry .= $qryUpdate;
-        $qryMap .= array_shift($qryMapUpdate);
+		list($qryUpdate, $qryMapUpdate) = $this->_inputBuilder("where");
+		$qry .= $qryUpdate;
+		$qryMap .= array_shift($qryMapUpdate);
 
-        return new DbQuery($qry, array_merge(array($qryMap), $qryMapUpdate));
-    }
+		return new DbQuery($qry, array_merge(array($qryMap), $qryMapUpdate));
+	}
 
-    /**
-     * A generic `key` = 'val' pair builder
-     *
-     * @param  string $section The variable to pull values from
-     * @return array           Array (query extension, query map extension)
-     */
-    private function _inputBuilder($section) {
-        $qryMap = "";
-        $subQry = "";
-        $values = array();
-        $array = ($section === "updates") ? $this->_columns : $this->{"_".$section};
+	/**
+	 * A generic `key` = 'val' pair builder
+	 *
+	 * @param  string $section The variable to pull values from
+	 * @return array           Array (query extension, query map extension)
+	 */
+	private function _inputBuilder($section)
+	{
+		$qryMap = "";
+		$subQry = "";
+		$values = array();
+		$array = ($section === "updates") ? $this->_columns : $this->{"_".$section};
 
-        $addGlue = false;
-        foreach($array as $key => $value) {
-            $meta = $this->_getMetaFromMap($section, $key, $value);
-            if($key !== $this->_primaryKey) {
-                $glue = $addGlue ? $meta[0] : "";
-                $qryMap .= $meta[1];
-                $values[] = $meta[2];
-                $subQry .= $glue.$meta[3];
-                $addGlue = true;
-            }
-        }
-        return array($subQry, array_merge(array($qryMap), $values));
-    }
+		$addGlue = false;
+		foreach($array as $key => $value) {
+			$meta = $this->_getMetaFromMap($section, $key, $value);
+			if($key !== $this->_primaryKey) {
+				$glue = $addGlue ? $meta[0] : "";
+				$qryMap .= $meta[1];
+				$values[] = $meta[2];
+				$subQry .= $glue.$meta[3];
+				$addGlue = true;
+			}
+		}
+		return array($subQry, array_merge(array($qryMap), $values));
+	}
 
 	/**
 	 * Map value to query map character
@@ -428,32 +438,36 @@ class QueryBuilder extends AppComponent
 	 * @return char          The character representing the DB type
 	 */
 	private function _getQryMapValueType($value) {
-		if(is_numeric($value)) {
+		if($value === "") {
+			return "s";
+		}
+		if(!preg_match('/[^\d]/', $value)) {
 			return "i";
 		}
 		return "s";
 	}
 
-    /**
-     * Pull value from various context maps
-     *
-     * @param  string $section Variable context (where, updates, etc.)
-     * @param  string $key     Accessor for the value
-     * @param  array  $value   Information used to build subquery (glue, qryMapValueType, value, qryString)
-     * @return string          The value pulled from the map
-     */
-    private function _getMetaFromMap($section, $key, $value)
-    {
-        switch($section) {
-            case 'updates':
-                return array(',', $this->_getQryMapValueType($value), $value, "`".$key."` = ?");
-            case 'where':
-                $map = $value;
-                $value = $map[sizeof($map) - 1];
-                $modifier = $map[0];
-                $column = $map[1];
-                $op = sizeof($map) === 4 ? $map[2] : "=";
-                return array($modifier, $this->_getQryMapValueType($value), $value, "`$column` $op ?");
-        }
-    }
+	/**
+	 * Pull value from various context maps
+	 *
+	 * @param  string $section Variable context (where, updates, etc.)
+	 * @param  string $key     Accessor for the value
+	 * @param  array  $value   Information used to build subquery (glue, qryMapValueType, value, qryString)
+	 * @return string          The value pulled from the map
+	 */
+	private function _getMetaFromMap($section, $key, $value)
+	{
+		switch($section) {
+		case 'updates':
+			return array(',', $this->_getQryMapValueType($value), $value, "`".$key."` = ?");
+		case 'where':
+			$map = $value;
+			$value = $map[sizeof($map) - 1];
+			$modifier = $map[0];
+			$column = $map[1];
+			$op = sizeof($map) === 4 ? $map[2] : "=";
+
+			return array($modifier, $this->_getQryMapValueType($value), $value, "`$column` $op ?");
+		}
+	}
 }
