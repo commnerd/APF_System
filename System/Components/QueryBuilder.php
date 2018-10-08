@@ -299,6 +299,9 @@ class QueryBuilder extends AppComponent
                 $obj = new $class();
                 if($relationship instanceof Belongs) {
                     $qry .= " RIGHT JOIN ";
+                    $qry .= "`".$obj->getTable()."` ON ";
+                    $qry .= "`".$src->getTable()."`.`".$relationship->getKey()."` = ";
+                    $qry .= "`".$obj->getTable()."`.`".$src->getPrimaryKey()."`";
                 }
                 else {
                     $qry .= " LEFT JOIN ";
@@ -306,7 +309,6 @@ class QueryBuilder extends AppComponent
                     $qry .= "`".$src->getTable()."`.`".$src->getPrimaryKey()."` = ";
                     $qry .= "`".$obj->getTable()."`.`".$relationship->getKey()."`";
                 }
-
             }
         }
 
