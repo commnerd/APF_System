@@ -7,6 +7,9 @@ namespace System\Components;
  */
 class Session extends AppComponent
 {
+
+    private $_flashCleanup = true;
+
     /**
      * Initialize session
      */
@@ -19,7 +22,6 @@ class Session extends AppComponent
         if(!isset($_SESSION['flash'])) {
             $_SESSION['flash'] = array();
         }
-
     }
 
     /**
@@ -27,7 +29,10 @@ class Session extends AppComponent
      */
     public function __destruct()
     {
-        $_SESSION['flash'] = array();
+        // echo '<pre>'.print_r($_SESSION, true).'</pre>';
+        if($this->_flashCleanup) {
+            $_SESSION['flash'] = array();
+        }
     }
 
     /**
@@ -42,14 +47,21 @@ class Session extends AppComponent
     }
 
     /**
-     * Set a short-living session variable
+     * Get/Set a short-living session variable
      *
      * @param string $key The key to look the variable up
      * @param mixed  $val The variable to return from the session
      */
-    public function flash($key, $val)
+    public function flash($key, $val = null)
     {
+        if(is_null($val)) {
+            if(!isset($_SESSION['flash'][$key])) {
+                return null;
+            }
+            return $_SESSION['flash'][$key];
+        }
         $_SESSION['flash'][$key] = $val;
+        $this->_flashCleanup = false;
     }
 
     /**
@@ -59,9 +71,9 @@ class Session extends AppComponent
      */
     public function get($key)
     {
-        if(isset($_SESSION['flash'][$key])) {
-            return $_SESSION['flash'][$key];
+        if(isset($_SESSION['main'][$key])) {
+            return $_SESSION['main'][$key];
         }
-        return $_SESSION['main'][$key];
+        return null;
     }
 }

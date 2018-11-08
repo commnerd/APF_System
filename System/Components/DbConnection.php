@@ -66,7 +66,7 @@ class DbConnection extends AppComponent
 			//$stmt->bind_param("i", $pTheBindVal);
 		}
 		if(!is_object($stmt)) {
-			exit(print_r($query, true));
+			exit(__LINE__." - ". print_r($query, true));
 		}
 		$stmt->execute();
 
@@ -114,7 +114,7 @@ class DbConnection extends AppComponent
 		}
 		unset($tempBindValArr);
 		if(!is_object($stmt)) {
-			exit(print_r($query, true));
+			exit(__LINE__." - ". print_r($query, true));
 		}
 		$stmt->execute();
 		$newID = $stmt->insert_id;
@@ -143,7 +143,7 @@ class DbConnection extends AppComponent
 
 		////var_dump($stmt);
 		if(!is_object($stmt)) {
-			exit(print_r($query, true));
+			exit(__LINE__." - ". print_r($query, true));
 		}
 		$stmt->execute();
 		// $newID = $stmt->update_id;

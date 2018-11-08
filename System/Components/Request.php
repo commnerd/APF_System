@@ -3,6 +3,8 @@
 namespace System\Components;
 
 use System\Interfaces\Request as RequestInterface;
+use System\Components\DbConnection;
+use System\Components\Validator;
 
 /**
  * Request object used to gather information about the request
@@ -57,6 +59,29 @@ class Request extends AppComponent implements RequestInterface
 		$this->_requestUrl = $_SERVER['REQUEST_URI'];
 	}
 
+	public function __get($name)
+	{
+		if(!isset($this->_arguments[$name])) {
+			return null;
+		}
+		return $this->_arguments[$name];
+	}
+
+	public function __set($name, $value)
+	{
+		$this->_arguments[$name] = $value;
+	}
+
+	/**
+	 * Push arguments into request
+	 * 
+	 * @param string $var Variable key
+	 * @param mixed  $val Variable value
+	 */
+	public function set($var, $val) {
+		$this->_arguments[$var] = $val;
+	}
+
 	/**
 	 * Retrieve header information
 	 *
@@ -95,6 +120,28 @@ class Request extends AppComponent implements RequestInterface
 	public function toArray()
 	{
 		return $this->_arguments;
+	}
+
+	/**
+	 * Alias for toArray to fit Laravel convention
+	 *
+	 * @return array The array of passed arguments
+	 */
+	public function all()
+	{
+		return $this->toArray();
+	}
+	
+	/**
+	 * Validate using System validator
+	 * 
+	 * @param  array  $rules Rules to use to validate this
+	 * @return void
+	 */
+	public function validate(array $rules) {
+		$validator = new Validator();
+
+		$validator->validate($this->toArray(), $rules);
 	}
 }
 

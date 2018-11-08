@@ -18,7 +18,12 @@ class BelongsToMany extends Belongs
         $class = $this->class;
         $results = $class::where($key, $this->sourceModel->getKey())->get();
         if($results instanceof Model) {
+            $results->{$this->column} = $this->sourceModel->getKey();
             return array($results);
+        }
+        foreach($results as $key => $obj) {
+           $obj->{$this->column} = $this->sourceModel->getKey();
+           $results[$key] = $obj;
         }
         return $results;
     }

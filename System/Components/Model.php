@@ -44,7 +44,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 *
 	 * @var string
 	 */
-	const ERROR_EXCEPTION_GET       = "Variable not found.";
+	const ERROR_EXCEPTION_GET       = "Variable '%s' not found.";
 
 	/**
 	 * Error passed for unintended arguments being passed
@@ -238,7 +238,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 			return $this->attributes;
 		}
 
-		throw new ErrorException(self::ERROR_EXCEPTION_GET);
+		throw new ErrorException(sprintf(self::ERROR_EXCEPTION_GET, $name));
 	}
 
 	/**
@@ -571,7 +571,8 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	protected function ___findOrFail($id)
 	{
 		$obj = $this->find($id);
-		if(empty($obj)) {
+		$id = $obj->getKey();
+		if(empty($id)) {
 			throw new ErrorException(self::ERROR_EXCEPTION_NOT_FOUND);
 		}
 		return $obj;
@@ -681,7 +682,6 @@ abstract class Model extends AppComponent implements IteratorAggregate
 
                 $this->_db->runQuery($query);
         }
-
 	}
 
 	/**
