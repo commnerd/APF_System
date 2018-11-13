@@ -20,6 +20,8 @@ class Validator extends AppComponent
 		'equals' => 'Equals',
 		'not_equals' => 'NotEquals',
 		'check_group' => 'CheckGroup',
+		'same' => 'Same',
+		'exists' => 'Exists',
 	);
 
 	protected $overrides = array();

@@ -614,6 +614,28 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	}
 
 	/**
+	 * Return all values as array
+	 *
+	 * @return array All attributes
+	 */
+	public function diffArray()
+	{
+		$diff = array();
+		foreach($this->attributes as $key => $value) {
+			if($value instanceof Model) {
+				$ary = $value->diffArray();
+				if(!empty($ary)) {
+					$diff[$key] = $ary;
+				}
+			}
+			if($value !== $this->_originalValues[$key]) {
+				$diff[$key] = $value;
+			}
+		}
+		return $diff;
+	}
+
+	/**
 	 * Cascade down array chains looking for models to cast to arrays
 	 *
 	 * @param  array  $array Arrays full of potential models
@@ -647,7 +669,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 *
 	 * @return array Array of associated models
 	 */
-	private function ___get($debug = false)
+	private function ___get()
 	{
 		$query = $this->_queryBuilder->get();
 		$records = $this->_db->runQuery($query);
@@ -665,6 +687,21 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	}
 
 	/**
+	 * Select the first element from a set
+	 *
+	 * @return Model First model from a ___get set
+	 */
+	private function ___first()
+	{
+		$records = $this->___get();
+
+		if(!empty($records)) {
+			 return array_pop($records);
+		}
+		return null;
+	}
+
+	/**
 	 * Update model in the database
 	 *
 	 * @return void
@@ -678,8 +715,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
                 }
         }
         if($executeUpdate) {
-                $query = $this->_queryBuilder->where($this->primaryKey, $this->getKey())->update($this->toArray());
-
+                $query = $this->_queryBuilder->where($this->primaryKey, $this->getKey())->update($this->diffArray());
                 $this->_db->runQuery($query);
         }
 	}
