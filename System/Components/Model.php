@@ -3,6 +3,7 @@
 namespace System\Components;
 
 use System\Components\Relationships\BelongsToMany;
+use System\Components\Relationships\ManyToMany;
 use System\Components\Relationships\BelongsTo;
 use System\Components\Relationships\HasMany;
 use System\Components\Relationships\HasOne;
@@ -85,6 +86,13 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * Values as read from database
 	 */
 	private $_originalValues;
+
+	/**
+	 * Relationship references
+	 *
+	 * @var array<Relationship> $_relationships;
+	 */
+	private $_relationships;
 
 	/**
 	 * Table maintaining this class's data
@@ -199,6 +207,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		$this->_instantiateArrayIfNecessary($this->casts);
 		$this->_instantiateArrayIfNecessary($this->fillable);
 		$this->_instantiateArrayIfNecessary($this->_originalValues);
+		$this->_instantiateArrayIfNecessary($this->_relationships);
 	}
 
 	/**
@@ -322,6 +331,23 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	}
 
 	/**
+	 * Grab the related models
+	 *
+	 * @param  string  $class      The related class
+	 * @param  string  $selfRef    The foreign key to identify this model
+	 * @param  string  $joinRef    The foreign key to identify the remote model
+	 * @param  string  $table      The table to look in if needing override
+	 * @return Relationship		   The relationship model
+	 */
+	public function manyToMany($class, $selfRef, $joinRef, $table)
+	{
+		if(!isset($this->_relationships[$table])) {
+			$this->_relationships[$table] = new ManyToMany($this->_db, $this, $class, $selfRef, $joinRef, $table);
+		}
+		return $this->_relationships[$table];
+	}
+
+	/**
 	 * Get the table for the model
 	 *
 	 * @return string The table name for the model
@@ -354,10 +380,10 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	public function getKey()
 	{
-		if(!isset($this->attributes[$this->primaryKey])) {
+		if(!isset($this->attributes[$this->getPrimaryKey()])) {
 			return null;
 		}
-		return $this->attributes[$this->primaryKey];
+		return $this->attributes[$this->getPrimaryKey()];
 	}
 
 	/**
@@ -367,7 +393,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @return Model              Whatever was just filled
 	 */
 	public function fill($attributes, $results = null) {
-		if(!isset($this->attributes[$this->primaryKey]) && isset($attributes[$this->getPrimaryKey()])) {
+		if(!isset($this->attributes[$this->getPrimaryKey()]) && isset($attributes[$this->getPrimaryKey()])) {
 			$this->attributes[$this->getPrimaryKey()] = $attributes[$this->getPrimaryKey()];
 		}
 		foreach($this->fillable as $key) {
@@ -430,7 +456,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		$class = $relation->getClass();
 
 		foreach($results as $row) {
-			if($row[$this->table."_".$this->primaryKey] === $this->getKey()) {
+			if($row[$this->table."_".$this->getPrimaryKey()] === $this->getKey()) {
 				$obj = new $class();
 				$with = $relation->getWith();
 				if(!empty($with)) {
@@ -452,21 +478,25 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	public function save()
 	{
 		$nonScalars = array();
+
+		$this->_saveRelatedItems();
+
 		foreach($this->attributes as $key => $attr) {
 			if(is_array($attr) || $attr instanceof Model) {
 				$nonScalars[$key] = $attr;
 				unset($this->attributes[$key]);
 			}
 		}
-		if(isset($this->attributes[$this->primaryKey])) {
+
+		if(isset($this->attributes[$this->getPrimaryKey()])) {
 			$this->_update();
 		}
 		else {
-			$this->attributes[$this->primaryKey] = $this->_insert();
+			$this->attributes[$this->getPrimaryKey()] = $this->_insert();
 		}
 
 		$this->attributes = array_merge($this->attributes, $nonScalars);
-		return $this->attributes[$this->primaryKey];
+		return $this->attributes[$this->getPrimaryKey()];
 	}
 
 	/**
@@ -581,17 +611,18 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	/**
 	 * Delete a given record
 	 *
-	 * @param boolean $cascade  If true, delete children and all subchildren
 	 * @return void
 	 */
-	private function ___delete($id)
+	private function ___delete()
 	{
 		if(empty($this->primaryKey)) {
 			throw new ErrorException(self::ERROR_EXCEPTION_DELETE);
 		}
 
+		$this->_deleteRelationships();
+
 		$column = $this->getPrimaryKey();
-		$query = $this->_queryBuilder->where($column, $id)->delete();
+		$query = $this->_queryBuilder->where($column, $this->getKey())->delete();
 		$this->_db->runQuery($query);
 	}
 
@@ -628,7 +659,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 					$diff[$key] = $ary;
 				}
 			}
-			if($value !== $this->_originalValues[$key]) {
+			if(in_array($key, $this->_originalValues) && $value !== $this->_originalValues[$key]) {
 				$diff[$key] = $value;
 			}
 		}
@@ -708,16 +739,19 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 */
 	private function _update()
 	{
-		$executeUpdate = false;
-        foreach($this->_originalValues as $key => $value) {
-                if($this->attributes[$key] !== $value) {
-                        $executeUpdate = true;
-                }
-        }
-        if($executeUpdate) {
-                $query = $this->_queryBuilder->where($this->primaryKey, $this->getKey())->update($this->diffArray());
-                $this->_db->runQuery($query);
-        }
+			$executeUpdate = false;
+		    foreach($this->_originalValues as $key => $value) {
+		            if($this->attributes[$key] !== $value) {
+		                    $executeUpdate = true;
+		            }
+		    }
+
+		    $diffArray = $this->diffArray();
+
+		    if(!empty($diffArray) && $executeUpdate) {
+		            $query = $this->_queryBuilder->where($this->getPrimaryKey(), $this->getKey())->update($diffArray);
+		            $this->_db->runQuery($query);
+		    }
 	}
 
 	/**
@@ -726,7 +760,14 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	 * @return integer Primary key
 	 */
 	private function _insert() {
-		$query = $this->_queryBuilder->insert($this->toArray());
+		$saveStruct = array();
+		foreach($this->toArray() as $key => $val) {
+			if(!is_object($val) && !is_array($val)) {
+				$saveStruct[$key] = $val;
+			}
+		}
+
+		$query = $this->_queryBuilder->insert($saveStruct);
 		return $this->_db->runQuery($query);
 	}
 
@@ -767,6 +808,49 @@ abstract class Model extends AppComponent implements IteratorAggregate
                 $i++;
         }
         return preg_match('/^System/', get_class($trace[$i]['object'])) || $trace[$i]['object'] instanceof Model;
+	}
 
+	/**
+	 * Save child relationships
+	 */
+	public function _saveRelatedItems()
+	{
+		$attributes = $this->attributes;
+		foreach(get_class_methods($this) as $method) {
+			$refMethod = new \ReflectionMethod(get_class($this), $method);
+
+			if(
+				!in_array($method, get_class_methods('\System\Components\Model')) &&
+				$refMethod->getNumberOfRequiredParameters() <= 0 &&
+				$this->{$method}() instanceof ManyToMany
+			) {
+				$this->attributes = $attributes;
+				$this->{$method}()->saveRelationships();
+				$attributes = $this->attributes;
+			}
+		}
+		$this->attributes = $attributes;
+	}
+
+	/**
+	 * Delete child relationships
+	 */
+	public function _deleteRelationships()
+	{
+		$attributes = $this->attributes;
+		foreach(get_class_methods($this) as $method) {
+			$refMethod = new \ReflectionMethod(get_class($this), $method);
+
+			if(
+				!in_array($method, get_class_methods('\System\Components\Model')) &&
+				$refMethod->getNumberOfRequiredParameters() <= 0 &&
+				$this->{$method}() instanceof ManyToMany
+			) {
+				$this->attributes = $attributes;
+				$this->{$method}()->deleteRelationships();
+				$attributes = $this->attributes;
+			}
+		}
+		$this->attributes = $attributes;
 	}
 }

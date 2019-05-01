@@ -13,7 +13,7 @@ abstract class Has extends Relationship
 {
     /**
      * Get the key for the corresponding relationship
-
+     *
      * @return string          The corresponding relationship key
      */
     protected function guessKey()

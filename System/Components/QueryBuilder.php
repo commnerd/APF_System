@@ -264,7 +264,7 @@ class QueryBuilder extends AppComponent
                 $selectors[] = $subQry;
             }
 
-             foreach($this->_joins as $relationship) {
+            foreach($this->_joins as $relationship) {
                 $class = $relationship->getClass();
                 $obj = new $class();
                 $dbQry = new DBQuery("SELECT * FROM `".$obj->getTable()."` LIMIT 1", array());
@@ -326,10 +326,22 @@ class QueryBuilder extends AppComponent
             if($key > 0) {
                 $qry .= $value[0]." ";
             }
-            $qry .= "`$this->_table`.`".$value[1]."` $op ?";
+
+            if($op == 'IN') {
+                $replacement = implode(',', str_split(str_repeat('?', sizeof($input))));
+                $qry .= "`$this->_table`.`".$value[1]."` $op (".$replacement.")";
+            }
+            else {
+                $qry .= "`$this->_table`.`".$value[1]."` $op ?";
+            }
 
             $qryMap .= $this->_getQryMapValueType($input);
-            $values[] = $input;
+            if(is_array($input)) {
+                $values = array_merge($values, $input);
+            }
+            else {
+                $values[] = $input;
+            }
         }
 
         if(!empty($this->_orderBy)) {
@@ -436,10 +448,17 @@ class QueryBuilder extends AppComponent
 	/**
 	 * Map value to query map character
 	 *
-	 * @param  mixed  $value The value to be mapped
-	 * @return char          The character representing the DB type
+	 * @param  mixed  $value    The value to be mapped
+	 * @return char|array<char> The character representing the DB type
 	 */
 	private function _getQryMapValueType($value) {
+        if(is_array($value)) {
+            $maps = "";
+            foreach($value as $element) {
+                $maps .= $this->_getQryMapValueType($element);
+            }
+            return $maps;
+        }
 		if($value === "") {
 			return "s";
 		}
@@ -468,6 +487,11 @@ class QueryBuilder extends AppComponent
 			$modifier = $map[0];
 			$column = $map[1];
 			$op = sizeof($map) === 4 ? $map[2] : "=";
+
+            if($op == 'IN') {
+                $replacement = implode(',', str_split(str_repeat('?', sizeof($map))));
+                $ary =  array($modifier, $this->_getQryMapValueType($value), $value, "`$column` $op (".$replacement.")");
+            }
 
 			return array($modifier, $this->_getQryMapValueType($value), $value, "`$column` $op ?");
 		}

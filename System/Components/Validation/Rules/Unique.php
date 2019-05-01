@@ -13,10 +13,10 @@ class Unique extends Rule {
 	public function validate($value)
 	{
 		if(is_null($this->db)) {
-			throw new \Exception("No database declared to test against.");
+			throw new \ErrorException("No database declared to test against.");
 		}
 		if(sizeof($this->params) < 2) {
-			throw new \Exception("Something is wrong with your validation formatting.");
+			throw new \ErrorException("Something is wrong with your validation formatting.");
 		}
 
 		$table = array_shift($this->params);
@@ -51,7 +51,7 @@ class Unique extends Rule {
 		}
 
 		if(sizeof($this->params) % 2 !== 0) {
-			throw new \Exception("Something is wrong with your validation formatting.");
+			throw new \ErrorException("Something is wrong with your validation formatting.");
 		}
 
 		if(!empty($this->params)) {

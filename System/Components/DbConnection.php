@@ -134,6 +134,12 @@ class DbConnection extends AppComponent
 			//print_r($ref);
 			$method = $ref->getMethod("bind_param");
 			//print_r($method);
+			if(!is_object($stmt)) {
+				echo '<pre>';
+				debug_print_backtrace();
+				echo '</pre>';
+				exit();
+			}
 			$method->invokeArgs($stmt,$this->_refValues($tempBindValArr));
 
 			//call_user_func_array(array($stmt, 'bind_param'), $pTheBindVal);

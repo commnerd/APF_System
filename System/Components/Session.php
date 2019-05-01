@@ -29,6 +29,7 @@ class Session extends AppComponent
      */
     public function __destruct()
     {
+        // echo '<pre>'.print_r($_SESSION, true).'</pre>';
         if($this->_flashCleanup) {
             $_SESSION['flash'] = array();
         }

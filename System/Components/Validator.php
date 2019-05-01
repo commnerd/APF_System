@@ -65,6 +65,7 @@ class Validator extends AppComponent
 				if(sizeof($triageAry) > 1) {
 					$params = explode(',', $triageAry[1]);
 				}
+				
 				$obj = new $class($request, $params, $this->_db);
 				if(!isset($request[$key])) {
 					$request[$key] = null;
