@@ -61,10 +61,22 @@ class ManyToMany extends Relationship
 
     /**
      * Sync relationships
+     *
+     * @param array<int|Model> $targets  List of IDs or Objects to sync
      */
-    public function sync()
+    public function sync(array $targets)
     {
         $this->_stripJoins();
+        $this->_relationships = array();
+        $class = $this->class;
+        foreach($targets as $target) {
+            if(is_numeric($target)) {
+                $this->_relationships[] = $class::findOrFail($target);
+            }
+            if($target instanceof Model) {
+                $this->_relationships[] = $target;
+            }
+        }
         $this->saveRelationships();
     }
 
@@ -76,7 +88,7 @@ class ManyToMany extends Relationship
         $keys = array();
         foreach($this->_relationships as $child) {
             $id = $child->getKey();
-            if(empty($id) && $child->isValid()) {
+            if(empty($id)) {
                 $child->save();
                 $id = $child->getKey();
             }

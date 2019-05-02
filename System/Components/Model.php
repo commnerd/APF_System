@@ -479,8 +479,6 @@ abstract class Model extends AppComponent implements IteratorAggregate
 	{
 		$nonScalars = array();
 
-		$this->_saveRelatedItems();
-
 		foreach($this->attributes as $key => $attr) {
 			if(is_array($attr) || $attr instanceof Model) {
 				$nonScalars[$key] = $attr;
@@ -494,6 +492,8 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		else {
 			$this->attributes[$this->getPrimaryKey()] = $this->_insert();
 		}
+
+		$this->_saveRelatedItems();
 
 		$this->attributes = array_merge($this->attributes, $nonScalars);
 		return $this->attributes[$this->getPrimaryKey()];
@@ -659,7 +659,7 @@ abstract class Model extends AppComponent implements IteratorAggregate
 					$diff[$key] = $ary;
 				}
 			}
-			if(in_array($key, $this->_originalValues) && $value !== $this->_originalValues[$key]) {
+			if(isset($this->_originalValues[$key]) && $value !== $this->_originalValues[$key]) {
 				$diff[$key] = $value;
 			}
 		}
@@ -818,7 +818,6 @@ abstract class Model extends AppComponent implements IteratorAggregate
 		$attributes = $this->attributes;
 		foreach(get_class_methods($this) as $method) {
 			$refMethod = new \ReflectionMethod(get_class($this), $method);
-
 			if(
 				!in_array($method, get_class_methods('\System\Components\Model')) &&
 				$refMethod->getNumberOfRequiredParameters() <= 0 &&
